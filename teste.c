@@ -11,30 +11,41 @@ typedef struct {
 } Barrier;
 
 void barrier_init(Barrier *barrier, int count) {
+    // Atribui o número total de threads que devem atingir a barreira
     barrier->count = count;
+    
+    // Inicializa a variável de espera com zero
     barrier->waiting = 0;
+    
+    // Inicializa o mutex para garantir exclusão mútua
     pthread_mutex_init(&barrier->mutex, NULL);
+    
+    // Inicializa a variável de condição para sincronização
     pthread_cond_init(&barrier->cond, NULL);
 }
 
 void barrier_wait(Barrier *barrier) {
-    pthread_mutex_lock(&barrier->mutex);
-    barrier->waiting++;
+    pthread_mutex_lock(&barrier->mutex); // Bloqueia o mutex para garantir exclusão mútua
 
+    barrier->waiting++; // Incrementa o contador de threads esperando
+
+    // Se todas as threads atingiram a barreira
     if (barrier->waiting >= barrier->count) {
-        barrier->waiting = 0;
-        pthread_cond_broadcast(&barrier->cond);
+        barrier->waiting = 0; // Reinicia o contador de threads esperando
+        pthread_cond_broadcast(&barrier->cond); // Libera todas as threads na barreira
     } else {
+        // Aguarda até que todas as threads atinjam a barreira
         pthread_cond_wait(&barrier->cond, &barrier->mutex);
     }
 
-    pthread_mutex_unlock(&barrier->mutex);
+    pthread_mutex_unlock(&barrier->mutex); // Libera o mutex
 }
 
 void barrier_destroy(Barrier *barrier) {
-    pthread_mutex_destroy(&barrier->mutex);
-    pthread_cond_destroy(&barrier->cond);
+    pthread_mutex_destroy(&barrier->mutex); // Destroi o mutex
+    pthread_cond_destroy(&barrier->cond); // Destroi a variável de condição
 }
+
 
 Barrier my_barrier;
 
